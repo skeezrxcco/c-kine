@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  role      Role     @default(KINE)
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[] @relation("KineAppointments")
+  treatments   Treatment[]
+  notes        Note[]
+
+  @@map("users")
+}
+
+model Patient {
+  id                  String   @id @default(cuid())
+  firstName          String
+  lastName           String
+  dateOfBirth        DateTime
+  email              String?
+  phone              String
+  address            String
+  socialSecurityNumber String  @unique
+  prescribingDoctor  String
+  emergencyContact   String
+  medicalHistory     String?
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  appointments       Appointment[]
+  treatments        Treatment[]
+  medicalRecord     MedicalRecord?
+  bills             Bill[]
+  teleClaims        TeleClaim[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  datetime  DateTime
+  duration  Int
+  type      AppointmentType
+  status    AppointmentStatus @default(SCHEDULED)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId String
+  kine      User    @relation("KineAppointments", fields: [kineId], references: [id])
+  kineId    String
+
+  @@map("appointments")
+}
+
+model Treatment {
+  id                 String   @id @default(cuid())
+  startDate          DateTime
+  endDate            DateTime?
+  diagnosis          String
+  objectives         String[]
+  prescriptionDetails String
+  prescriptionFile    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  patient            Patient @relation(fields: [patientId], references: [id])
+  patientId          String
+  kine               User    @relation(fields: [kineId], references: [id])
+  kineId             String
+  sessions           Session[]
+  bills              Bill[]
+
+  @@map("treatments")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  date      DateTime
+  notes     String?
+  progress  Int      @default(0)
+  ngapCode  NGAPCode @default(AMK7)
+  coefficient Int    @default(1)
+  distance   Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  treatment   Treatment @relation(fields: [treatmentId], references: [id])
+  treatmentId String
+  exercises   Exercise[]
+  bill        Bill?
+
+  @@map("sessions")
+}
+
+model Exercise {
+  id           String   @id @default(cuid())
+  name         String
+  description  String
+  duration     Int
+  repetitions  Int
+  sets         Int
+  instructions String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions     Session[]
+
+  @@map("exercises")
+}
+
+model MedicalRecord {
+  id           String   @id @default(cuid())
+  bloodType    String
+  allergies    String[]
+  medicalHistory String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  patient      Patient @relation(fields: [patientId], references: [id])
+  patientId    String  @unique
+  documents    Document[]
+  notes        Note[]
+
+  @@map("medical_records")
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  url       String
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  medicalRecord    MedicalRecord @relation(fields: [medicalRecordId], references: [id])
+  medicalRecordId  String
+
+  @@map("documents")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  medicalRecord    MedicalRecord @relation(fields: [medicalRecordId], references: [id])
+  medicalRecordId  String
+  author      User    @relation(fields: [authorId], references: [id])
+  authorId    String
+
+  @@map("notes")
+}
+
+model Bill {
+  id              String   @id @default(cuid())
+  amount          Float
+  status          BillStatus @default(PENDING)
+  date            DateTime
+  baseRate        Float    @default(16.13)
+  coefficient     Int      @default(1)
+  coverageRate    Float    @default(70.0)
+  partObligatoire Float    @default(11.29)
+  partComplementaire Float?
+  patientShare    Float?
+  tierPayant      Boolean @default(false)
+  paymentMethod   String?
+  insuranceDetails String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  patient         Patient @relation(fields: [patientId], references: [id])
+  patientId       String
+  session         Session @relation(fields: [sessionId], references: [id])
+  sessionId       String  @unique
+  teleClaim       TeleClaim?
+  treatment       Treatment @relation(fields: [treatmentId], references: [id])
+  treatmentId     String
+
+  @@map("bills")
+}
+
+model TeleClaim {
+  id                String   @id @default(cuid())
+  transmissionDate  DateTime
+  status            TeleClaimStatus @default(PENDING)
+  amount            Float
+  type              TeleClaimType
+  rejectionReason   String?
+  rejectionCode     String?
+  paymentDate       DateTime?
+  paymentAmount     Float?
+  paymentReference  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  patient          Patient @relation(fields: [patientId], references: [id])
+  patientId        String
+  bill             Bill    @relation(fields: [billId], references: [id])
+  billId           String  @unique
+
+  @@map("tele_claims")
+}
+
+enum Role {
+  KINE
+  SECRETARY
+  ADMIN
+}
+
+enum AppointmentType {
+  INITIAL
+  FOLLOWUP
+  FINAL
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  REJECTED
+}
+
+enum TeleClaimStatus {
+  PENDING
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
+enum TeleClaimType {
+  CPAM
+  MUTUELLE
+}
+
+enum NGAPCode {
+  AMK7      // Rééducation simple
+  AMK8      // Rééducation standard
+  AMK9      // Rééducation pédiatrique
+  AMK10     // Rééducation complexe
+  AMC7      // Rééducation spécifique simple
+  AMC8      // Rééducation spécifique standard
+  AMC10     // Rééducation spécifique complexe
+  AMC15     // Rééducation neurologique lourde
+  IK        // Indemnités kilométriques
+}
