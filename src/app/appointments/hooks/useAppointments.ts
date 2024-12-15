@@ -23,6 +23,7 @@ export function useAppointments() {
     try {
       setIsLoading(true);
       const result = await getAppointments(selectedDate);
+      console.log(result);
       if (result.error) {
         setError(result.error);
       } else {

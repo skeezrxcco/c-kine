@@ -1,3 +1,5 @@
+import {Prisma} from "@prisma/client"
+
 // Types communs
 export interface User {
   id: string;
@@ -22,17 +24,9 @@ export interface Patient {
   notes: string;
 }
 
-export interface Appointment {
-  id: string;
-  patientId: string;
-  kineId: string;
-  datetime: string;
-  duration: number;
-  type: 'initial' | 'followup' | 'final';
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
-  notes?: string;
-}
-
+export type Appointment = Prisma.AppointmentGetPayload<{
+  include: {kine:true} 
+}>
 export interface Treatment {
   id: string;
   patientId: string;

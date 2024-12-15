@@ -6,11 +6,20 @@ import { Appointment } from '@/types';
 
 export async function getAppointments(date: Date) {
   try {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    const currentDate = new Date(date);
     
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Calculate start of the week (Monday)
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - (currentDate.getDay() + 6) % 7);
+    startOfWeek.setHours(0, 0, 0, 0); // Set to start of the day
+
+    // Calculate end of the week (Sunday)
+    const endOfWeek = new Date(currentDate);
+    endOfWeek.setDate(currentDate.getDate() + (7 - (currentDate.getDay() + 6) % 7 - 1));
+    endOfWeek.setHours(23, 59, 59, 999); // Set to end of the day
+
+    console.log('Start of Week:', startOfWeek.toLocaleString());
+    console.log('End of Week:', endOfWeek.toLocaleString());
 
     const appointments = await prisma.appointment.findMany({
       include: {
@@ -19,8 +28,8 @@ export async function getAppointments(date: Date) {
       },
       where: {
         datetime: {
-          gte: startOfDay,
-          lt: endOfDay
+          gte: startOfWeek,
+          lte: endOfWeek
         }
       },
       orderBy: {
@@ -38,6 +47,7 @@ export async function getAppointments(date: Date) {
 export async function createAppointment(data: Partial<Appointment>) {
   try {
     const appointment = await prisma.appointment.create({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: data as any,
       include: {
         patient: true,
@@ -57,6 +67,7 @@ export async function updateAppointment(id: string, data: Partial<Appointment>) 
   try {
     const appointment = await prisma.appointment.update({
       where: { id },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: data as any,
       include: {
         patient: true,

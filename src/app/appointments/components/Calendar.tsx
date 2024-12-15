@@ -1,8 +1,11 @@
+'use client'
+
 import React from 'react';
-import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Appointment } from '../../../types';
 import { AppointmentSlot } from './AppointmentSlot';
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface CalendarProps {
   appointments: Appointment[];
@@ -12,12 +15,41 @@ interface CalendarProps {
 }
 
 export function Calendar({ appointments, selectedDate, onSelectDate, onSelectAppointment }: CalendarProps) {
-  const weekStart = startOfWeek(selectedDate, { locale: fr });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const [currentWeekStart, setCurrentWeekStart] = React.useState(startOfWeek(selectedDate, { locale: fr }));
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
   const hours = Array.from({ length: 11 }, (_, i) => i + 8); // 8h-19h
+
+  const goToPreviousWeek = () => {
+    setCurrentWeekStart(prevWeekStart => subWeeks(prevWeekStart, 1));
+  };
+
+  const goToNextWeek = () => {
+    setCurrentWeekStart(prevWeekStart => addWeeks(prevWeekStart, 1));
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
+      <div className="flex justify-between items-center p-4 border-b">
+        <button 
+          onClick={goToPreviousWeek} 
+          className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          aria-label="Semaine précédente"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="text-lg font-semibold">
+          {format(currentWeekStart, 'MMMM yyyy', { locale: fr })}
+        </div>
+        <button 
+          onClick={goToNextWeek} 
+          className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          aria-label="Semaine suivante"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
       <div className="grid grid-cols-8 border-b">
         <div className="p-4 text-gray-500">Heures</div>
         {weekDays.map((day) => (
@@ -65,3 +97,4 @@ export function Calendar({ appointments, selectedDate, onSelectDate, onSelectApp
     </div>
   );
 }
+

@@ -15,8 +15,8 @@ export function AppointmentSlot({ appointment, onClick }: AppointmentSlotProps) 
   return (
     <div
       className={`rounded-lg p-2 mb-1 cursor-pointer transition-colors ${
-        appointment.status === 'confirmed'
-          ? 'bg-green-100 hover:bg-green-200'
+        appointment.status
+          ? 'bg-green-100 hover:bg-green-200' 
           : appointment.status === 'cancelled'
           ? 'bg-red-100 hover:bg-red-200'
           : 'bg-blue-100 hover:bg-blue-200'
