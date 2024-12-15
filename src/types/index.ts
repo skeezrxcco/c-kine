@@ -25,7 +25,7 @@ export interface Patient {
 }
 
 export type Appointment = Prisma.AppointmentGetPayload<{
-  include: {kine:true} 
+  include: {kine:true, patient:true} 
 }>
 export interface Treatment {
   id: string;

@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 import { Appointment } from '@/types';
 
 export async function getAppointments(date: Date) {
@@ -44,15 +45,13 @@ export async function getAppointments(date: Date) {
   }
 }
 
-export async function createAppointment(data: Partial<Appointment>) {
+export async function createAppointment(
+  data: Omit<Prisma.AppointmentUncheckedCreateInput, 'createdAt' | 'updatedAt'>
+) {
   try {
+    console.log(data);
     const appointment = await prisma.appointment.create({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: data as any,
-      include: {
-        patient: true,
-        kine: true
-      }
+      data,
     });
     
     revalidatePath('/appointments');
@@ -63,16 +62,13 @@ export async function createAppointment(data: Partial<Appointment>) {
   }
 }
 
-export async function updateAppointment(id: string, data: Partial<Appointment>) {
+export async function updateAppointment(id: string, data: Appointment) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {kine, patient, ...rest} = data;
     const appointment = await prisma.appointment.update({
       where: { id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: data as any,
-      include: {
-        patient: true,
-        kine: true
-      }
+      data: rest
     });
     
     revalidatePath('/appointments');

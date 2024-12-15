@@ -8,10 +8,11 @@ import {
   updateAppointment, 
   deleteAppointment 
 } from '../actions';
+import { Prisma } from '@prisma/client';
 
 export function useAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>(undefined);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -41,7 +42,7 @@ export function useAppointments() {
     fetchAppointments();
   }, [selectedDate]);
 
-  const handleCreate = async (data: Partial<Appointment>) => {
+  const handleCreate = async (data: Omit<Prisma.AppointmentUncheckedCreateInput, 'createdAt' | 'updatedAt'>) => {
     try {
       setIsLoading(true);
       const result = await createAppointment(data);
@@ -96,7 +97,7 @@ export function useAppointments() {
   };
 
   const openCreateModal = () => {
-    setSelectedAppointment(null);
+    setSelectedAppointment(undefined);
     setIsCreateModalOpen(true);
   };
 
@@ -114,7 +115,7 @@ export function useAppointments() {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setIsDeleteModalOpen(false);
-    setSelectedAppointment(null);
+    setSelectedAppointment(undefined);
   };
 
   return {

@@ -7,9 +7,10 @@ import { usePatients } from '@/app/patients/hooks/usePatients';
 import { TimeSelect } from './TimeSelect';
 import { DurationSelect } from './DurationSelect';
 import { AppointmentTypeSelect } from './AppointmentTypeSelect';
+import { Prisma } from '@prisma/client';
 
 interface AppointmentFormProps {
-  onSubmit: (data: Partial<Appointment>) => void;
+  onSubmit: (data:Omit<Prisma.AppointmentUncheckedCreateInput, 'createdAt' | 'updatedAt'>) => void;
   initialData?: Appointment;
   selectedDate: Date;
   onCancel: () => void;
@@ -17,20 +18,25 @@ interface AppointmentFormProps {
 
 export function AppointmentForm({ onSubmit, initialData, selectedDate, onCancel }: AppointmentFormProps) {
   const { patients } = usePatients();
-  const [formData, setFormData] = React.useState<Partial<Appointment>>(
+  const [formData, setFormData] = React.useState<Omit<Prisma.AppointmentUncheckedCreateInput, 'createdAt' | 'updatedAt'>>(
     initialData || {
       patientId: '',
-      datetime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
+      datetime: selectedDate,
       duration: 30,
-      type: 'followup',
-      status: 'scheduled',
-      notes: ''
+      type: 'FOLLOWUP',
+      status: 'SCHEDULED',
+      notes: '',
+      kineId: 'cm4orl3u800012gv7g4t15m2g' // Added missing required kineId field
     }
   );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const submissionData: Omit<Prisma.AppointmentUncheckedCreateInput, 'createdAt' | 'updatedAt'> = {
+      ...formData,
+      datetime: formData.datetime ? new Date(formData.datetime) : new Date()
+    };
+    onSubmit(submissionData);
   };
 
   const handleChange = (name: string, value: any) => {
@@ -72,12 +78,12 @@ export function AppointmentForm({ onSubmit, initialData, selectedDate, onCancel 
 
       <div className="grid grid-cols-2 gap-4">
         <TimeSelect
-          value={formData.datetime?.split('T')[1].slice(0, 5) || '09:00'}
+          value={formData.datetime instanceof Date ? formData.datetime.getHours().toString().padStart(2, '0') + ':' + formData.datetime.getMinutes().toString().padStart(2, '0') : '09:00'}
           onChange={(time) => {
             const [hours, minutes] = time.split(':');
-            const newDate = new Date(selectedDate);
+            const newDate = new Date(formData.datetime || new Date());
             newDate.setHours(parseInt(hours), parseInt(minutes));
-            handleChange('datetime', format(newDate, "yyyy-MM-dd'T'HH:mm"));
+            handleChange('datetime', newDate);
           }}
         />
 
@@ -88,7 +94,7 @@ export function AppointmentForm({ onSubmit, initialData, selectedDate, onCancel 
       </div>
 
       <AppointmentTypeSelect
-        value={formData.type}
+        value={formData.type?.toLowerCase() as "followup" | "initial" | "final"}
         onChange={(type) => handleChange('type', type)}
       />
 
@@ -97,7 +103,7 @@ export function AppointmentForm({ onSubmit, initialData, selectedDate, onCancel 
           Notes
         </label>
         <textarea
-          value={formData.notes}
+          value={formData.notes || ''}
           onChange={(e) => handleChange('notes', e.target.value)}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"

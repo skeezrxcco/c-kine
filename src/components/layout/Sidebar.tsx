@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { 
   Calendar, 
@@ -19,13 +20,13 @@ export function Sidebar() {
       </div>
       <nav className="space-y-1">
         <SidebarLink icon={<Calendar />} text="Rendez-vous" path="/appointments" />
-        <SidebarLink icon={<Users />} text="Patients" path="/patients" />
+        {/* <SidebarLink icon={<Users />} text="Patients" path="/patients" />
         <SidebarLink icon={<ClipboardList />} text="Traitements" path="/treatments" />
         <SidebarLink icon={<FolderOpen />} text="Dossiers" path="/dossiers" />
         <SidebarLink icon={<FileText />} text="Documents" path="/documents" />
         <SidebarLink icon={<CreditCard />} text="Facturation" path="/billing" />
         <SidebarLink icon={<Send />} text="Télétransmission" path="/teletransmission" />
-        <SidebarLink icon={<Settings />} text="Paramètres" path="/settings" />
+        <SidebarLink icon={<Settings />} text="Paramètres" path="/settings" /> */}
       </nav>
     </div>
   );

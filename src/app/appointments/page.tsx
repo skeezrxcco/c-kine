@@ -7,7 +7,8 @@ import { AppointmentForm } from './components/AppointmentForm';
 import { Dialog } from '@/components/ui/Dialog';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAppointments } from './hooks/useAppointments';
-import { Appointment } from '@/types';
+
+import { Prisma } from '@prisma/client';
 
 export default function AppointmentsPage() {
   const {
@@ -27,13 +28,13 @@ export default function AppointmentsPage() {
     handleDelete,
   } = useAppointments();
 
-  const handleAppointmentAction = (action: 'edit' | 'delete', appointment: Appointment) => {
-    if (action === 'edit') {
-      openEditModal(appointment);
-    } else {
-      openDeleteModal(appointment);
-    }
-  };
+  // const handleAppointmentAction = (action: 'edit' | 'delete', appointment: Appointment) => {
+  //   if (action === 'edit') {
+  //     openEditModal(appointment);
+  //   } else {
+  //     openDeleteModal(appointment);
+  //   }
+  // };
 
   return (
     <div className="space-y-6">
@@ -82,7 +83,9 @@ export default function AppointmentsPage() {
         <AppointmentForm
           initialData={selectedAppointment}
           selectedDate={selectedDate}
-          onSubmit={selectedAppointment ? handleUpdate : handleCreate}
+          onSubmit={(data) => selectedAppointment 
+            ? handleUpdate(selectedAppointment.id, { ...data, id: selectedAppointment.id, datetime: new Date(data.datetime) })
+            : handleCreate({...data, datetime: new Date(data.datetime)})}
           onCancel={closeModals}
         />
       </Dialog>
@@ -91,7 +94,7 @@ export default function AppointmentsPage() {
       <ConfirmDialog
         isOpen={isDeleteModalOpen}
         onClose={closeModals}
-        onConfirm={handleDelete}
+        onConfirm={() => handleDelete(selectedAppointment?.id || '')}
         title="Supprimer le rendez-vous"
         message="Êtes-vous sûr de vouloir supprimer ce rendez-vous ? Cette action est irréversible."
         confirmLabel="Supprimer"
